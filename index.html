@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Registro Presenze Guide - Autoscuola</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome per le icone -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- html2canvas per salvare l'immagine -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        body {
+            background-color: #f3f4f6;
+            touch-action: pan-y; /* Permette lo scroll verticale ma gestisce il canvas separatamente */
+        }
+        canvas {
+            touch-action: none; /* Disabilita lo scroll del browser mentre si firma */
+            cursor: crosshair;
+        }
+        /* Stile carta strappata */
+        .receipt-edge {
+            background-image: linear-gradient(135deg, #ffffff 50%, transparent 50%), linear-gradient(225deg, #ffffff 50%, transparent 50%);
+            background-position: bottom;
+            background-size: 20px 20px;
+            background-repeat: repeat-x;
+            height: 20px;
+            width: 100%;
+            position: absolute;
+            bottom: -10px;
+            left: 0;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body class="font-sans text-gray-800 min-h-screen flex flex-col items-center justify-center p-4">
+
+    <!-- Header App -->
+    <header class="w-full max-w-md mb-6 text-center">
+        <h1 class="text-2xl font-bold text-blue-700 uppercase tracking-wider">
+            <i class="fa-solid fa-car-side mr-2"></i>DriveCheck
+        </h1>
+        <p class="text-gray-500 text-sm">Registro digitale guide</p>
+    </header>
+
+    <!-- Area principale (Il "Foglio" che verrà salvato) -->
+    <main id="capture-area" class="w-full max-w-md bg-white shadow-xl rounded-t-lg relative pb-8 mb-4">
+        
+        <!-- Intestazione Modulo -->
+        <div class="bg-blue-600 p-4 rounded-t-lg text-white flex justify-between items-center">
+            <div>
+                <h2 class="font-bold text-lg">Modulo Presenza</h2>
+                <p class="text-blue-100 text-xs" id="display-date">Data: --/--/----</p>
+            </div>
+            <i class="fa-solid fa-clipboard-check text-2xl opacity-80"></i>
+        </div>
+
+        <div class="p-6 space-y-4">
+            <!-- Dati Allievo -->
+            <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Allievo</label>
+                <input type="text" id="studentName" placeholder="Nome e Cognome" 
+                    class="w-full border-b-2 border-gray-200 focus:border-blue-500 outline-none py-2 text-lg bg-transparent transition-colors">
+            </div>
+
+            <!-- Sezione Pagamento -->
+            <div class="bg-yellow-50 rounded-lg p-4 border border-yellow-200 space-y-3">
+                <div class="flex items-center">
+                    <input type="checkbox" id="paymentReceived" class="w-5 h-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500 cursor-pointer">
+                    <label for="paymentReceived" class="ml-3 text-gray-800 font-bold cursor-pointer select-none flex items-center uppercase text-xs tracking-wider">
+                        <i class="fa-solid fa-hand-holding-dollar mr-2 text-yellow-600 text-base"></i>
+                        Pagamento Ricevuto
+                    </label>
+                </div>
+                
+                <div class="pt-1">
+                    <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Importo (€)</label>
+                    <input type="number" id="paymentAmount" placeholder="0.00" step="0.50"
+                        class="w-full bg-white border border-gray-300 rounded px-3 py-2 text-sm focus:border-blue-500 outline-none text-gray-800 font-medium shadow-sm">
+                </div>
+            </div>
+
+            <!-- Area Firma -->
+            <div class="mt-6">
+                <div class="flex justify-between items-end mb-2">
+                    <label class="text-xs font-bold text-gray-500 uppercase">Firma Allievo</label>
+                    <button type="button" onclick="clearCanvas()" class="text-xs text-red-500 hover:text-red-700 font-semibold">
+                        <i class="fa-solid fa-eraser"></i> Pulisci
+                    </button>
+                </div>
+                <div class="relative border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 h-40 w-full overflow-hidden touch-none" id="canvas-container">
+                    <canvas id="signature-pad" class="w-full h-full block"></canvas>
+                    <div class="absolute bottom-2 right-2 text-gray-300 text-xs pointer-events-none select-none">Firma qui</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Decorazione bordo "scontrino" -->
+        <div class="receipt-edge"></div>
+    </main>
+
+    <!-- Pulsanti Azione (Non vengono salvati nell'immagine) -->
+    <div class="w-full max-w-md space-y-3 mb-8">
+        <button onclick="saveNote()" id="saveBtn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-lg shadow-lg flex items-center justify-center transition-all active:scale-95">
+            <span id="btnText"><i class="fa-solid fa-download mr-2"></i> Conferma e Salva Ricevuta</span>
+            <span id="btnLoader" class="hidden"><i class="fa-solid fa-circle-notch fa-spin"></i> Elaborazione...</span>
+        </button>
+        
+        <button onclick="resetForm()" class="w-full bg-white text-gray-600 font-semibold py-3 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors">
+            Nuova Guida
+        </button>
+    </div>
+
+    <!-- Modal Successo -->
+    <div id="successModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-xl p-6 text-center shadow-2xl max-w-xs mx-4 transform scale-95 transition-transform duration-300" id="modalContent">
+            <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 text-green-600 text-3xl">
+                <i class="fa-solid fa-check"></i>
+            </div>
+            <h3 class="text-xl font-bold text-gray-800 mb-2">Salvato!</h3>
+            <p class="text-gray-600 mb-6 text-sm">L'immagine della guida è stata scaricata sul dispositivo.</p>
+            <button onclick="closeModal()" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700">OK</button>
+        </div>
+    </div>
+
+    <script>
+        // --- Configurazione Data ---
+        const dateElement = document.getElementById('display-date');
+        const today = new Date().toLocaleDateString('it-IT');
+        dateElement.textContent = `Data: ${today}`;
+
+        // --- Logica Canvas (Firma) ---
+        const canvas = document.getElementById('signature-pad');
+        const container = document.getElementById('canvas-container');
+        const ctx = canvas.getContext('2d');
+        let isDrawing = false;
+
+        function resizeCanvas() {
+            // Imposta la dimensione interna del canvas uguale alla dimensione visualizzata
+            canvas.width = container.offsetWidth;
+            canvas.height = container.offsetHeight;
+            ctx.lineWidth = 2;
+            ctx.lineCap = 'round';
+            ctx.strokeStyle = '#000000';
+        }
+
+        // Ridimensiona all'avvio e al resize della finestra
+        window.addEventListener('load', resizeCanvas);
+        window.addEventListener('resize', resizeCanvas);
+
+        function getPos(e) {
+            const rect = canvas.getBoundingClientRect();
+            // Supporto sia per touch che per mouse
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            return {
+                x: clientX - rect.left,
+                y: clientY - rect.top
+            };
+        }
+
+        function startDrawing(e) {
+            isDrawing = true;
+            const pos = getPos(e);
+            ctx.beginPath();
+            ctx.moveTo(pos.x, pos.y);
+            // Prevenire scroll su touch
+            if(e.type === 'touchstart') e.preventDefault();
+        }
+
+        function draw(e) {
+            if (!isDrawing) return;
+            const pos = getPos(e);
+            ctx.lineTo(pos.x, pos.y);
+            ctx.stroke();
+            if(e.type === 'touchmove') e.preventDefault();
+        }
+
+        function stopDrawing() {
+            isDrawing = false;
+            ctx.beginPath();
+        }
+
+        // Event Listeners Mouse
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mouseup', stopDrawing);
+        canvas.addEventListener('mouseout', stopDrawing);
+
+        // Event Listeners Touch (Mobile)
+        canvas.addEventListener('touchstart', startDrawing, { passive: false });
+        canvas.addEventListener('touchmove', draw, { passive: false });
+        canvas.addEventListener('touchend', stopDrawing);
+
+        function clearCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        // --- Logica Salvataggio ---
+        function saveNote() {
+            const studentName = document.getElementById('studentName').value;
+            
+            if (!studentName) {
+                alert("Inserisci il nome dell'allievo prima di salvare.");
+                return;
+            }
+
+            const btn = document.getElementById('saveBtn');
+            const btnText = document.getElementById('btnText');
+            const btnLoader = document.getElementById('btnLoader');
+
+            // UI Loading state
+            btn.disabled = true;
+            btnText.classList.add('hidden');
+            btnLoader.classList.remove('hidden');
+            btn.classList.add('opacity-75');
+
+            // Timeout breve per permettere alla UI di aggiornarsi
+            setTimeout(() => {
+                const elementToCapture = document.getElementById('capture-area');
+                
+                html2canvas(elementToCapture, {
+                    scale: 2, // Migliore qualità
+                    backgroundColor: null, // Sfondo trasparente/bianco gestito dal CSS
+                    logging: false
+                }).then(canvasResult => {
+                    // Crea link download
+                    const link = document.createElement('a');
+                    const safeName = studentName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+                    const dateStr = new Date().toISOString().split('T')[0];
+                    
+                    link.download = `guida_${safeName}_${dateStr}.png`;
+                    link.href = canvasResult.toDataURL("image/png");
+                    link.click();
+
+                    // Mostra successo
+                    showSuccessModal();
+
+                    // Reset UI bottone
+                    btn.disabled = false;
+                    btnText.classList.remove('hidden');
+                    btnLoader.classList.add('hidden');
+                    btn.classList.remove('opacity-75');
+                }).catch(err => {
+                    console.error(err);
+                    alert("Errore durante il salvataggio. Riprova.");
+                    btn.disabled = false;
+                    btnText.classList.remove('hidden');
+                    btnLoader.classList.add('hidden');
+                });
+            }, 100);
+        }
+
+        // --- Reset ---
+        function resetForm() {
+            if(confirm("Sei sicuro di voler cancellare tutto e iniziare una nuova scheda?")) {
+                document.getElementById('studentName').value = "";
+                
+                // Reset Pagamento
+                document.getElementById('paymentReceived').checked = false;
+                document.getElementById('paymentAmount').value = "";
+                
+                clearCanvas();
+            }
+        }
+
+        // --- Modal ---
+        const modal = document.getElementById('successModal');
+        const modalContent = document.getElementById('modalContent');
+
+        function showSuccessModal() {
+            modal.classList.remove('hidden');
+            // Timeout per animazione CSS
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modalContent.classList.remove('scale-95');
+                modalContent.classList.add('scale-100');
+            }, 10);
+        }
+
+        function closeModal() {
+            modal.classList.add('opacity-0');
+            modalContent.classList.remove('scale-100');
+            modalContent.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+    </script>
+</body>
+</html>
