@@ -37,6 +37,26 @@
             color: #000000 !important; 
             opacity: 1 !important;
         }
+        /* Stile specifico per l'input data header per renderlo bianco */
+        #driveDate {
+            color: #ffffff !important;
+            color-scheme: dark;
+        }
+        /* Reset colore per input data quando catturato da html2canvas */
+        .html2canvas-container #driveDate {
+            color: #ffffff !important;
+        }
+        /* Stile scrollbar suggerimenti */
+        #suggestions::-webkit-scrollbar {
+            width: 8px;
+        }
+        #suggestions::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+        }
+        #suggestions::-webkit-scrollbar-thumb {
+            background: #c1c1c1; 
+            border-radius: 4px;
+        }
     </style>
 </head>
 <body class="font-sans text-gray-800 min-h-screen flex flex-col items-center justify-center p-4">
@@ -56,20 +76,34 @@
         <div class="bg-blue-600 p-4 rounded-t-lg text-white flex justify-between items-center">
             <div>
                 <h2 class="font-bold text-lg">Modulo Presenza</h2>
-                <p class="text-blue-100 text-xs" id="display-date">Data: --/--/----</p>
+                <!-- Data Modificabile -->
+                <div class="flex items-center text-blue-100 text-xs mt-1">
+                    <span class="mr-2 opacity-80">Data:</span>
+                    <input type="date" id="driveDate" class="bg-transparent font-medium focus:outline-none border-b border-blue-400 focus:border-white pb-0.5 cursor-pointer">
+                </div>
             </div>
             <i class="fa-solid fa-clipboard-check text-2xl opacity-80"></i>
         </div>
 
         <div class="p-6 space-y-4">
-            <!-- Dati Allievo -->
-            <div>
-                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Allievo</label>
-                <input type="text" id="studentName" placeholder="Nome e Cognome" 
-                    class="w-full border-b-2 border-gray-200 focus:border-blue-500 outline-none py-2 text-xl font-bold text-black bg-transparent transition-colors">
+            <!-- Dati Allievo con Autocomplete -->
+            <div class="relative">
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">ALLIEVO/A</label>
+                <div class="relative">
+                    <input type="text" id="studentName" placeholder="Cerca o inserisci nome..." autocomplete="off"
+                        class="w-full border-b-2 border-gray-200 focus:border-blue-500 outline-none py-2 text-lg font-bold text-black bg-transparent transition-colors">
+                    
+                    <!-- Icona lente (estetica) -->
+                    <i class="fa-solid fa-magnifying-glass absolute right-2 top-3 text-gray-300 pointer-events-none"></i>
+                    
+                    <!-- Lista suggerimenti -->
+                    <ul id="suggestions" class="absolute z-50 w-full bg-white border border-gray-200 shadow-xl rounded-b-lg max-h-60 overflow-y-auto hidden text-sm text-left">
+                        <!-- I suggerimenti verranno inseriti qui via JS -->
+                    </ul>
+                </div>
             </div>
 
-            <!-- Sezione Pagamento (Migliorata visibilità) -->
+            <!-- Sezione Pagamento -->
             <div class="bg-yellow-50 rounded-lg p-4 border-2 border-yellow-200 space-y-3">
                 <div class="flex items-center">
                     <input type="checkbox" id="paymentReceived" class="w-6 h-6 text-blue-600 rounded border-gray-400 focus:ring-blue-500 cursor-pointer">
@@ -94,7 +128,6 @@
                         <i class="fa-solid fa-eraser"></i> Pulisci
                     </button>
                 </div>
-                <!-- Aggiunto touch-action: none inline per sicurezza massima -->
                 <div class="relative border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 h-48 w-full overflow-hidden" id="canvas-container" style="touch-action: none;">
                     <canvas id="signature-pad" class="w-full h-full block touch-none"></canvas>
                     <div class="absolute bottom-2 right-2 text-gray-300 text-xs pointer-events-none select-none">Firma qui</div>
@@ -131,10 +164,130 @@
     </div>
 
     <script>
+        // ==========================================
+        // CONFIGURAZIONE DATABASE ALLIEVI
+        // ==========================================
+        const DB_ALLIEVI = {
+            "Colleferro": {
+                "B": [
+                    "Alice Crecco", "Alisia Pelacci", "Andrea Russo", "Angelica Gabrieli", "Angelica Matturro", 
+                    "Angelica Mescia", "Anna Belli", "Arduini Edoardo", "Aurora Consilia Pecchi", "Aurora Gizzi", 
+                    "Aurora Sozzi", "Beatrice Uras", "Bran Elisa", "Campagna Valerio", "Carrubino Erica", 
+                    "Chiara Grieco", "Chima Samuele", "Collacchi Valerio", "Coluzzi Elena", "Cristal Turri", 
+                    "Cristian Dragutinovic", "Daniele Mazzocchi", "De Felice Lonardo", "Denise Gabrielli", 
+                    "Eleonora Santigli", "Fabrizio Ravelli", "Ferrante Martina", "Frattaroli Valeria", 
+                    "Gagliarducci Valerio", "Gallo Noemi", "Giacomo Marcozzi", "Giada Vari", 
+                    "Giorgia Mastrogiacomo", "Grazia Greco Maria", "Gregory Pezzella", "Greta Turco", 
+                    "Iadarola Pietro", "Ilaria Ippoliti", "Ilaria Loreti", "Lavinia Proia", "Leo Veronica", 
+                    "Lorenza Necci", "Lorenzo Stella", "Marchetti Valentina", "Maria Martina Priori", 
+                    "Momodu Odidi", "Ricci Valerio", "Selene Sortoluzzi"
+                ],
+                "B1": ["Damiano Falcone", "Greta Testa", "Syria Testa"],
+                "BS": ["Carrubino Erica"]
+            },
+            "Di Castro": {
+                "Am": ["Luca Silvestri"]
+            },
+            "Genazzano": {
+                "B": [
+                    "Agnetelli Asia", "Alessio Luberti", "Alexandru Carp", "Amarilda Mataj", "Angelucci Lara", 
+                    "Asia Maggi", "Bangrazi Kevin", "Beatrice Canini", "Bianchi Daniele", "Chiara Ronci", 
+                    "Escalona Laura Piedra", "Evelin Gentili", "Gabriel Nita", "Lazzara Martina", 
+                    "Massimiliano Rocca"
+                ]
+            },
+            "La Maxima": {
+                "A": ["Carlo Crescenzi", "Chiara Nicolia"]
+            },
+            "Palestrina": {
+                "B": [
+                    "Bernardini Giulia", "Boscaini Elena", "Chiara Trentini", "Dell'Orco Simone", 
+                    "Romano Sara", "Ruggero Verrelli"
+                ]
+            },
+            "Paliano": {
+                "B": [
+                    "Alexander Porfilio", "Antonio Terenzi", "Clara Tiroli", "Francesca Marucci", 
+                    "Ippoliti Leonardo", "Lorenzo Verani", "Pacciani Virginia"
+                ]
+            }
+        };
+
+        // --- Logica Autocomplete Migliorata ---
+        const studentInput = document.getElementById('studentName');
+        const suggestionsList = document.getElementById('suggestions');
+        
+        // 1. Appiattire il DB conservando le info extra (Sede e Patente)
+        function getStudentsData() {
+            let allStudents = [];
+            for (const sede in DB_ALLIEVI) {
+                for (const patente in DB_ALLIEVI[sede]) {
+                    const nomi = DB_ALLIEVI[sede][patente];
+                    // Crea un oggetto per ogni studente con le info aggiuntive
+                    const studentsWithInfo = nomi.map(name => ({
+                        name: name,
+                        sede: sede,
+                        patente: patente
+                    }));
+                    allStudents = allStudents.concat(studentsWithInfo);
+                }
+            }
+            // Ordina alfabeticamente per nome
+            return allStudents.sort((a, b) => a.name.localeCompare(b.name));
+        }
+
+        const allStudentsData = getStudentsData();
+
+        // 2. Event Listener Input
+        studentInput.addEventListener('input', function() {
+            const query = this.value.toLowerCase();
+            suggestionsList.innerHTML = '';
+            
+            if (query.length < 2) { 
+                suggestionsList.classList.add('hidden');
+                return;
+            }
+
+            const matches = allStudentsData.filter(student => student.name.toLowerCase().includes(query));
+
+            if (matches.length > 0) {
+                matches.forEach(student => {
+                    const li = document.createElement('li');
+                    // Layout a due righe: Nome (grassetto) e sotto Sede - Patente (piccolo)
+                    li.innerHTML = `
+                        <div class="font-bold text-gray-800">${student.name}</div>
+                        <div class="text-xs text-gray-500 uppercase tracking-wide">
+                            <i class="fa-solid fa-location-dot mr-1"></i>${student.sede} 
+                            <span class="mx-1 text-gray-300">|</span> 
+                            <i class="fa-solid fa-id-card mr-1"></i>Pat. ${student.patente}
+                        </div>
+                    `;
+                    li.className = "px-4 py-2 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-0";
+                    
+                    // Al click inserisce NOME - SEDE (Pat. X)
+                    li.onclick = () => {
+                        studentInput.value = `${student.name} - ${student.sede} (Pat. ${student.patente})`;
+                        suggestionsList.classList.add('hidden');
+                    };
+                    suggestionsList.appendChild(li);
+                });
+                suggestionsList.classList.remove('hidden');
+            } else {
+                suggestionsList.classList.add('hidden');
+            }
+        });
+
+        // Nascondi suggerimenti se si clicca fuori
+        document.addEventListener('click', function(e) {
+            if (!studentInput.contains(e.target) && !suggestionsList.contains(e.target)) {
+                suggestionsList.classList.add('hidden');
+            }
+        });
+
+
         // --- Configurazione Data ---
-        const dateElement = document.getElementById('display-date');
-        const today = new Date().toLocaleDateString('it-IT');
-        dateElement.textContent = `Data: ${today}`;
+        const dateInput = document.getElementById('driveDate');
+        dateInput.value = new Date().toISOString().split('T')[0];
 
         // --- Logica Toggle Pagamento ---
         const paymentCheckbox = document.getElementById('paymentReceived');
@@ -143,11 +296,10 @@
         paymentCheckbox.addEventListener('change', function() {
             if(this.checked) {
                 amountContainer.classList.remove('hidden');
-                // Focus automatico sul campo importo per comodità
                 setTimeout(() => document.getElementById('paymentAmount').focus(), 100);
             } else {
                 amountContainer.classList.add('hidden');
-                document.getElementById('paymentAmount').value = ""; // Pulisce il valore se nascosto
+                document.getElementById('paymentAmount').value = "";
             }
         });
 
@@ -156,44 +308,30 @@
         const container = document.getElementById('canvas-container');
         const ctx = canvas.getContext('2d');
         let isDrawing = false;
-        let lastWidth = 0; // Per tracciare la larghezza e evitare reset su scroll verticale
+        let lastWidth = 0;
 
         function initCanvas() {
-            // Impostazione iniziale
             canvas.width = container.offsetWidth;
             canvas.height = container.offsetHeight;
-            
             ctx.lineWidth = 2;
             ctx.lineCap = 'round';
             ctx.strokeStyle = '#000000';
-            
             lastWidth = window.innerWidth;
         }
 
-        // Funzione intelligente per il resize
         function handleResize() {
-            // Se la larghezza della finestra non è cambiata (è successo solo uno scroll verticale/barra indirizzi), non fare nulla
             if (window.innerWidth === lastWidth) return;
-
-            // Salva il contenuto attuale
             const savedData = canvas.toDataURL();
-            
-            // Aggiorna dimensioni
             canvas.width = container.offsetWidth;
             canvas.height = container.offsetHeight;
-            
-            // Ripristina stile
             ctx.lineWidth = 2;
             ctx.lineCap = 'round';
             ctx.strokeStyle = '#000000';
-            
-            // Tenta di ripristinare l'immagine (potrebbe essere scalata se l'aspect ratio cambia drasticamente)
             const img = new Image();
             img.src = savedData;
             img.onload = function() {
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
             };
-
             lastWidth = window.innerWidth;
         }
 
@@ -202,7 +340,6 @@
 
         function getPos(e) {
             const rect = canvas.getBoundingClientRect();
-            // Supporto sia per touch che per mouse
             const clientX = e.touches ? e.touches[0].clientX : e.clientX;
             const clientY = e.touches ? e.touches[0].clientY : e.clientY;
             return {
@@ -216,14 +353,11 @@
             const pos = getPos(e);
             ctx.beginPath();
             ctx.moveTo(pos.x, pos.y);
-            // Non preventDefault qui per permettere click su pulsanti se fuori canvas, ma canvas ha touch-action: none
         }
 
         function draw(e) {
             if (!isDrawing) return;
-            // Prevent scrolling solo se si sta disegnando dentro il canvas
             if(e.cancelable) e.preventDefault(); 
-            
             const pos = getPos(e);
             ctx.lineTo(pos.x, pos.y);
             ctx.stroke();
@@ -234,14 +368,10 @@
             ctx.beginPath();
         }
 
-        // Event Listeners Mouse
         canvas.addEventListener('mousedown', startDrawing);
         canvas.addEventListener('mousemove', draw);
         canvas.addEventListener('mouseup', stopDrawing);
         canvas.addEventListener('mouseout', stopDrawing);
-
-        // Event Listeners Touch (Mobile)
-        // passive: false è cruciale per poter usare preventDefault() e bloccare lo scroll mentre si firma
         canvas.addEventListener('touchstart', startDrawing, { passive: false });
         canvas.addEventListener('touchmove', draw, { passive: false });
         canvas.addEventListener('touchend', stopDrawing);
@@ -254,6 +384,7 @@
         // --- Logica Salvataggio ---
         function saveNote() {
             const studentName = document.getElementById('studentName').value;
+            const selectedDate = document.getElementById('driveDate').value;
             
             if (!studentName) {
                 alert("Inserisci il nome dell'allievo prima di salvare.");
@@ -264,35 +395,41 @@
             const btnText = document.getElementById('btnText');
             const btnLoader = document.getElementById('btnLoader');
 
-            // UI Loading state
             btn.disabled = true;
             btnText.classList.add('hidden');
             btnLoader.classList.remove('hidden');
             btn.classList.add('opacity-75');
 
-            // Timeout breve per permettere alla UI di aggiornarsi
             setTimeout(() => {
                 const elementToCapture = document.getElementById('capture-area');
                 
                 html2canvas(elementToCapture, {
-                    scale: 3, // Aumentato a 3 per massima nitidezza
+                    scale: 3,
                     backgroundColor: null,
                     logging: false,
                     useCORS: true,
-                    // Opzione per catturare meglio gli input
                     onclone: (clonedDoc) => {
-                        // Assicura che i valori degli input siano visibili nel clone
                         const inputs = clonedDoc.querySelectorAll('input');
                         inputs.forEach(input => {
-                            input.style.color = '#000000';
-                            input.style.fontWeight = 'bold';
+                            if (input.id === 'driveDate') {
+                                input.style.color = '#ffffff';
+                            } else {
+                                input.style.color = '#000000';
+                                input.style.fontWeight = 'bold';
+                            }
                         });
+                        // Nascondi lista suggerimenti nel clone
+                        const suggestions = clonedDoc.getElementById('suggestions');
+                        if(suggestions) suggestions.style.display = 'none';
+                        // Rimuovi icona lente nel clone se vuoi pulizia
+                        const icon = clonedDoc.querySelector('.fa-magnifying-glass');
+                        if(icon) icon.style.display = 'none';
                     }
                 }).then(canvasResult => {
-                    // Crea link download
                     const link = document.createElement('a');
+                    // Pulisce il nome file da caratteri speciali come parentesi
                     const safeName = studentName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-                    const dateStr = new Date().toISOString().split('T')[0];
+                    const dateStr = selectedDate || new Date().toISOString().split('T')[0];
                     
                     link.download = `guida_${safeName}_${dateStr}.png`;
                     link.href = canvasResult.toDataURL("image/png");
@@ -300,7 +437,6 @@
 
                     showSuccessModal();
 
-                    // Reset UI bottone
                     btn.disabled = false;
                     btnText.classList.remove('hidden');
                     btnLoader.classList.add('hidden');
@@ -315,26 +451,17 @@
             }, 100);
         }
 
-        // --- Reset ---
         function resetForm() {
             if(confirm("Sei sicuro di voler cancellare tutto e iniziare una nuova scheda?")) {
                 document.getElementById('studentName').value = "";
-                
-                // Reset Pagamento
-                const pCheckbox = document.getElementById('paymentReceived');
-                pCheckbox.checked = false;
-                
-                const pAmount = document.getElementById('paymentAmount');
-                pAmount.value = "";
-                
-                // Nascondi nuovamente il contenitore
+                document.getElementById('driveDate').value = new Date().toISOString().split('T')[0];
+                document.getElementById('paymentReceived').checked = false;
+                document.getElementById('paymentAmount').value = "";
                 document.getElementById('paymentAmountContainer').classList.add('hidden');
-                
                 clearCanvas();
             }
         }
 
-        // --- Modal ---
         const modal = document.getElementById('successModal');
         const modalContent = document.getElementById('modalContent');
 
