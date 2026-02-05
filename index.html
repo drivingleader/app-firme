@@ -167,52 +167,57 @@
         // ==========================================
         // CONFIGURAZIONE DATABASE ALLIEVI
         // ==========================================
-        const DB_ALLIEVI = {
-            "Colleferro": {
-                "B": [
-                    "Alice Crecco", "Alisia Pelacci", "Andrea Russo", "Angelica Gabrieli", "Angelica Matturro", 
-                    "Angelica Mescia", "Anna Belli", "Arduini Edoardo", "Aurora Consilia Pecchi", "Aurora Gizzi", 
-                    "Aurora Sozzi", "Beatrice Uras", "Bran Elisa", "Campagna Valerio", "Carrubino Erica", 
-                    "Chiara Grieco", "Chima Samuele", "Collacchi Valerio", "Coluzzi Elena", "Cristal Turri", 
-                    "Cristian Dragutinovic", "Daniele Mazzocchi", "De Felice Lonardo", "Denise Gabrielli", 
-                    "Eleonora Santigli", "Fabrizio Ravelli", "Ferrante Martina", "Frattaroli Valeria", 
-                    "Gagliarducci Valerio", "Gallo Noemi", "Giacomo Marcozzi", "Giada Vari", 
-                    "Giorgia Mastrogiacomo", "Grazia Greco Maria", "Gregory Pezzella", "Greta Turco", 
-                    "Iadarola Pietro", "Ilaria Ippoliti", "Ilaria Loreti", "Lavinia Proia", "Leo Veronica", 
-                    "Lorenza Necci", "Lorenzo Stella", "Marchetti Valentina", "Maria Martina Priori", 
-                    "Momodu Odidi", "Ricci Valerio", "Selene Sortoluzzi"
-                ],
-                "B1": ["Damiano Falcone", "Greta Testa", "Syria Testa"],
-                "BS": ["Carrubino Erica"]
-            },
-            "Di Castro": {
-                "Am": ["Luca Silvestri"]
-            },
-            "Genazzano": {
-                "B": [
-                    "Agnetelli Asia", "Alessio Luberti", "Alexandru Carp", "Amarilda Mataj", "Angelucci Lara", 
-                    "Asia Maggi", "Bangrazi Kevin", "Beatrice Canini", "Bianchi Daniele", "Chiara Ronci", 
-                    "Escalona Laura Piedra", "Evelin Gentili", "Gabriel Nita", "Lazzara Martina", 
-                    "Massimiliano Rocca"
-                ]
-            },
-            "La Maxima": {
-                "A": ["Carlo Crescenzi", "Chiara Nicolia"]
-            },
-            "Palestrina": {
-                "B": [
-                    "Bernardini Giulia", "Boscaini Elena", "Chiara Trentini", "Dell'Orco Simone", 
-                    "Romano Sara", "Ruggero Verrelli"
-                ]
-            },
-            "Paliano": {
-                "B": [
-                    "Alexander Porfilio", "Antonio Terenzi", "Clara Tiroli", "Francesca Marucci", 
-                    "Ippoliti Leonardo", "Lorenzo Verani", "Pacciani Virginia"
-                ]
-            }
-        };
-
+    const DB_ALLIEVI = {
+        "Colleferro": {
+            "A1": ["Daniel Esposti", "Nicolò Pratini"],
+            "AM": ["Federici Manuel"],
+            "B": [
+                "Alice Crecco", "Alisia Pelacci", "Andrea Russo", "Angelica Gabrieli", "Angelica Matturro", 
+                "Angelica Mescia", "Angelica Quattrociocchi", "Anna Belli", "Arduini Edoardo", 
+                "Aurora Consilia Pecchi", "Aurora Gizzi", "Aurora Sozzi", "Battisti Daria", "Bran Elisa", 
+                "Campagna Valerio", "Carrubino Erica", "Chiara Grieco", "Chima Samuele", "Collacchi Valerio", 
+                "Coluzzi Elena", "Cristal Turri", "Cristian Dragutinovic", "Daniele Mazzocchi", 
+                "De Felice Lonardo", "Denise Gabrielli", "Eleonora Santigli", "Fabrizio Ravelli", 
+                "Frattaroli Valeria", "Gagliarducci Valerio", "Galesso Tommaso", "Gallo Noemi", 
+                "Giacomo Marcozzi", "Giorgia Mastrogiacomo", "Grazia Greco Maria", "Gregory Pezzella", 
+                "Iadarola Pietro", "Leo Veronica", "Lorenza Necci", "Marchetti Valentina", 
+                "Maria Martina Priori", "Momodu Odidi", "Ricci Valerio", "Sara Tantari", "Selene Sortoluzzi"
+            ],
+            "B1": ["Damiano Falcone", "Greta Testa", "Syria Testa"],
+            "BS": ["Carrubino Erica"],
+            "GA": ["Francesco Padovani"]
+        },
+        "Di Castro": {
+            "Am": ["Luca Silvestri"],
+            "B1": ["Alicia Cupini"]
+        },
+        "Genazzano": {
+            "B": [
+                "Agnetelli Asia", "Alessio Luberti", "Alexandru Carp", "Amarilda Mataj", "Angelucci Lara", 
+                "Asia Maggi", "Bangrazi Kevin", "Beatrice Canini", "Bianchi Daniele", "Chiara Ronci", 
+                "Eleonora Poeta", "Escalona Laura Piedra", "Evelin Gentili", "Gabriel Nita", "Lazzara Martina", 
+                "Massimiliano Rocca"
+            ]
+        },
+        "La Maxima": {
+            "A": ["Carlo Crescenzi", "Chiara Nicolia"]
+        },
+        "Palestrina": {
+            "B": [
+                "Bernardini Giulia", "Boscaini Elena", "Chiara Trentini", "Dell'Orco Simone", 
+                "Romano Sara", "Ruggero Verrelli"
+            ]
+        },
+        "Paliano": {
+            "B": [
+                "Clara Tiroli", "Francesca Marucci", "Lorenzo Verani"
+            ]
+        },
+        "Roma": {
+            "B": ["Bokiniec Karol Piotr", "Ferrante Martina", "Ionelia Lazar"],
+            "D CQC": ["Dario Moriconi", "De Fabrizio Melas", "Febbo Furio", "Moscatelli Roberto", "Roselli Salvatore"]
+        }
+    };
         // --- Logica Autocomplete Migliorata ---
         const studentInput = document.getElementById('studentName');
         const suggestionsList = document.getElementById('suggestions');
@@ -484,4 +489,5 @@
         }
     </script>
 </body>
+
 </html>
