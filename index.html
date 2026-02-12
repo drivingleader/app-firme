@@ -141,8 +141,8 @@
 
     <!-- Pulsanti Azione -->
     <div class="w-full max-w-md space-y-3 mb-8">
-        <button onclick="saveNote()" id="saveBtn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-lg shadow-lg flex items-center justify-center transition-all active:scale-95 text-lg">
-            <span id="btnText"><i class="fa-solid fa-download mr-2"></i> Conferma e Salva Ricevuta</span>
+        <button onclick="saveAndShare()" id="saveBtn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-lg shadow-lg flex items-center justify-center transition-all active:scale-95 text-lg">
+            <span id="btnText"><i class="fa-brands fa-whatsapp mr-2 text-xl"></i> Salva e Condividi</span>
             <span id="btnLoader" class="hidden"><i class="fa-solid fa-circle-notch fa-spin"></i> Elaborazione...</span>
         </button>
         
@@ -157,8 +157,8 @@
             <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 text-green-600 text-3xl">
                 <i class="fa-solid fa-check"></i>
             </div>
-            <h3 class="text-xl font-bold text-gray-800 mb-2">Salvato!</h3>
-            <p class="text-gray-600 mb-6 text-sm">L'immagine della guida è stata scaricata sul dispositivo.</p>
+            <h3 class="text-xl font-bold text-gray-800 mb-2">Fatto!</h3>
+            <p class="text-gray-600 mb-6 text-sm">L'immagine è stata salvata ed è pronta per la condivisione.</p>
             <button onclick="closeModal()" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700">OK</button>
         </div>
     </div>
@@ -167,74 +167,52 @@
         // ==========================================
         // CONFIGURAZIONE DATABASE ALLIEVI
         // ==========================================
-    const DB_ALLIEVI = {
-        "Bonamore": {
-            "BS": ["Angelis De Stefano"]
-        },
-        "Cannone": {
-            "B78": ["Colagiacomo Giorgia"]
-        },
-        "Cannone Paliano": {
-            "B1": ["Del Giorgia Signore"]
-        },
-        "Colleferro": {
-            "A": ["Alberto Iovoli", "Claudia Santaniello", "Proietto Simone"],
-            "A1": ["Daniel Esposti", "Nicolò Pratini", "Nicolò Pratini"],
-            "AM": ["Edoardo Lorenzi", "Federici Manuel"],
-            "B": [
-                "Alice Crecco", "Alisia Pelacci", "Andrea Russo", "Angelica Gabrieli", "Angelica Mescia", 
-                "Angelica Quattrociocchi", "Arduini Edoardo", "Aurora Consilia Pecchi", "Aurora Gizzi", 
-                "Battisti Daria", "Blasio Giulia", "Bran Elisa", "Campagna Valerio", "Carrubino Erica", 
-                "Chiara Grieco", "Chima Samuele", "Christian Navarra", "Collacchi Valerio", "Coluzzi Elena", 
-                "Cristal Turri", "Cristian Dragutinovic", "Daniele Mazzocchi", "De Felice Lonardo", 
-                "Denise Gabrielli", "Fabrizio Ravelli", "Gagliarducci Valerio", "Galesso Tommaso", 
-                "Gallo Noemi", "Giacomo Marcozzi", "Giorgia Mastrogiacomo", "Grazia Greco Maria", 
-                "Leo Veronica", "Lorenza Necci", "Marchetti Valentina", "Maria Martina Priori", 
-                "Momodu Odidi", "Riccardo Serafini", "Sara Tantari", "Selene Sortoluzzi"
-            ],
-            "B1": ["Bella Chiara La", "Damiano Falcone", "Greta Testa", "Syria Testa"],
-            "BS": ["Carrubino Erica"],
-            "GA": ["Francesco Padovani"]
-        },
-        "Di Castro": {
-            "B1": ["Alicia Cupini"]
-        },
-        "Genazzano": {
-            "B": [
-                "Accadia Valerio", "Agnetelli Asia", "Alessio Luberti", "Alexandru Carp", "Amarilda Mataj", 
-                "Angelucci Lara", "Asia Maggi", "Bangrazi Kevin", "Beatrice Canini", "Bianchi Daniele", 
-                "Chiara Ronci", "Eleonora Poeta", "Escalona Laura Piedra", "Evelin Gentili", "Gabriel Nita", 
-                "Lazzara Martina", "Massimiliano Rocca"
-            ]
-        },
-        "La Maxima": {
-            "A": ["Carlo Crescenzi", "Chiara Nicolia"],
-            "B1": ["Gaia Sanchini"],
-            "C": ["Daniele Favullo", "Mirco Viglino"]
-        },
-        "Palestrina": {
-            "B": [
-                "Bernardini Giulia", "Boscaini Elena", "Chiara Trentini", "Dell'Orco Simone", 
-                "Romano Sara", "Ruggero Verrelli"
-            ]
-        },
-        "Paliano": {
-            "A1": ["Del Prete Vincenzo"],
-            "B": [
-                "Clara Tiroli", "Francesca Marucci", "Lorenzo Verani"
-            ],
-            "B78": ["Elena Insalata"]
-        },
-        "Roma": {
-            "B": ["Bokiniec Karol Piotr", "Ferrante Martina", "Ionelia Lazar"],
-            "D CQC": ["Dario Moriconi", "De Fabrizio Melas", "Febbo Furio", "Moscatelli Roberto", "Roselli Salvatore"]
-        },
-        "Serafini": {
-            "A": ["Domenico Renzetti"],
-            "A2": ["Rossi Veronica"],
-            "AM": ["Francesco Proietti"]
-        }
-    };
+        const DB_ALLIEVI = {
+            "Colleferro": {
+                "B": [
+                    "Alice Crecco", "Alisia Pelacci", "Andrea Russo", "Angelica Gabrieli", "Angelica Matturro", 
+                    "Angelica Mescia", "Anna Belli", "Arduini Edoardo", "Aurora Consilia Pecchi", "Aurora Gizzi", 
+                    "Aurora Sozzi", "Beatrice Uras", "Bran Elisa", "Campagna Valerio", "Carrubino Erica", 
+                    "Chiara Grieco", "Chima Samuele", "Collacchi Valerio", "Coluzzi Elena", "Cristal Turri", 
+                    "Cristian Dragutinovic", "Daniele Mazzocchi", "De Felice Lonardo", "Denise Gabrielli", 
+                    "Eleonora Santigli", "Fabrizio Ravelli", "Ferrante Martina", "Frattaroli Valeria", 
+                    "Gagliarducci Valerio", "Gallo Noemi", "Giacomo Marcozzi", "Giada Vari", 
+                    "Giorgia Mastrogiacomo", "Grazia Greco Maria", "Gregory Pezzella", "Greta Turco", 
+                    "Iadarola Pietro", "Ilaria Ippoliti", "Ilaria Loreti", "Lavinia Proia", "Leo Veronica", 
+                    "Lorenza Necci", "Lorenzo Stella", "Marchetti Valentina", "Maria Martina Priori", 
+                    "Momodu Odidi", "Ricci Valerio", "Selene Sortoluzzi"
+                ],
+                "B1": ["Damiano Falcone", "Greta Testa", "Syria Testa"],
+                "BS": ["Carrubino Erica"]
+            },
+            "Di Castro": {
+                "Am": ["Luca Silvestri"]
+            },
+            "Genazzano": {
+                "B": [
+                    "Agnetelli Asia", "Alessio Luberti", "Alexandru Carp", "Amarilda Mataj", "Angelucci Lara", 
+                    "Asia Maggi", "Bangrazi Kevin", "Beatrice Canini", "Bianchi Daniele", "Chiara Ronci", 
+                    "Escalona Laura Piedra", "Evelin Gentili", "Gabriel Nita", "Lazzara Martina", 
+                    "Massimiliano Rocca"
+                ]
+            },
+            "La Maxima": {
+                "A": ["Carlo Crescenzi", "Chiara Nicolia"]
+            },
+            "Palestrina": {
+                "B": [
+                    "Bernardini Giulia", "Boscaini Elena", "Chiara Trentini", "Dell'Orco Simone", 
+                    "Romano Sara", "Ruggero Verrelli"
+                ]
+            },
+            "Paliano": {
+                "B": [
+                    "Alexander Porfilio", "Antonio Terenzi", "Clara Tiroli", "Francesca Marucci", 
+                    "Ippoliti Leonardo", "Lorenzo Verani", "Pacciani Virginia"
+                ]
+            }
+        };
+
         // --- Logica Autocomplete Migliorata ---
         const studentInput = document.getElementById('studentName');
         const suggestionsList = document.getElementById('suggestions');
@@ -403,8 +381,8 @@
             ctx.beginPath();
         }
 
-        // --- Logica Salvataggio ---
-        function saveNote() {
+        // --- Logica Salvataggio e Condivisione ---
+        function saveAndShare() {
             const studentName = document.getElementById('studentName').value;
             const selectedDate = document.getElementById('driveDate').value;
             
@@ -440,22 +418,41 @@
                                 input.style.fontWeight = 'bold';
                             }
                         });
-                        // Nascondi lista suggerimenti nel clone
                         const suggestions = clonedDoc.getElementById('suggestions');
                         if(suggestions) suggestions.style.display = 'none';
-                        // Rimuovi icona lente nel clone se vuoi pulizia
                         const icon = clonedDoc.querySelector('.fa-magnifying-glass');
                         if(icon) icon.style.display = 'none';
                     }
-                }).then(canvasResult => {
-                    const link = document.createElement('a');
-                    // Pulisce il nome file da caratteri speciali come parentesi
+                }).then(async canvasResult => {
                     const safeName = studentName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
                     const dateStr = selectedDate || new Date().toISOString().split('T')[0];
+                    const fileName = `guida_${safeName}_${dateStr}.png`;
                     
-                    link.download = `guida_${safeName}_${dateStr}.png`;
-                    link.href = canvasResult.toDataURL("image/png");
+                    const dataUrl = canvasResult.toDataURL("image/png");
+
+                    // 1. Forza il download in background (salva in galleria/file)
+                    const link = document.createElement('a');
+                    link.download = fileName;
+                    link.href = dataUrl;
                     link.click();
+
+                    // 2. Prepara il file per la Condivisione Nativa (WhatsApp)
+                    try {
+                        const res = await fetch(dataUrl);
+                        const blob = await res.blob();
+                        const file = new File([blob], fileName, { type: 'image/png' });
+
+                        // Controlla se il dispositivo supporta la condivisione di file
+                        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                            await navigator.share({
+                                files: [file],
+                                title: `Ricevuta Guida - ${studentName}`,
+                                text: `Ecco la ricevuta della guida per ${studentName}`
+                            });
+                        }
+                    } catch (error) {
+                        console.log("Condivisione annullata o non supportata", error);
+                    }
 
                     showSuccessModal();
 
@@ -506,9 +503,4 @@
         }
     </script>
 </body>
-
 </html>
-
-
-
-
