@@ -409,14 +409,26 @@
                     logging: false,
                     useCORS: true,
                     onclone: (clonedDoc) => {
+                        // SOLUZIONE DATA: Sostituisco l'input della data con un testo normale per una resa perfetta
+                        const dateInputClone = clonedDoc.getElementById('driveDate');
+                        if (dateInputClone) {
+                            const dateVal = dateInputClone.value;
+                            let formattedDate = dateVal;
+                            if (dateVal) {
+                                const [y, m, d] = dateVal.split('-');
+                                formattedDate = `${d}/${m}/${y}`; // Formato italiano GG/MM/AAAA
+                            }
+                            const dateSpan = clonedDoc.createElement('span');
+                            dateSpan.textContent = formattedDate;
+                            dateSpan.className = "text-white font-bold text-sm tracking-widest";
+                            dateInputClone.parentNode.replaceChild(dateSpan, dateInputClone);
+                        }
+
                         const inputs = clonedDoc.querySelectorAll('input');
                         inputs.forEach(input => {
-                            if (input.id === 'driveDate') {
-                                input.style.color = '#ffffff';
-                            } else {
-                                input.style.color = '#000000';
-                                input.style.fontWeight = 'bold';
-                            }
+                            // Non serve più il controllo su 'driveDate' perché l'abbiamo appena rimosso dal clone
+                            input.style.color = '#000000';
+                            input.style.fontWeight = 'bold';
                         });
                         const suggestions = clonedDoc.getElementById('suggestions');
                         if(suggestions) suggestions.style.display = 'none';
